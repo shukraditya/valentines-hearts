@@ -4,8 +4,9 @@
     <title>Valentine's Proposal</title>
     <style>
         body { 
-            margin: 0;
+            margin: 20px;
             background: #1a1a1a;
+            overflow: hidden;
         }
         canvas { 
             display: block;
@@ -38,7 +39,7 @@
             border-radius: 25px;
             cursor: pointer;
             font-size: 18px;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             font-family: Arial, sans-serif;
         }
         #yesBtn {
@@ -52,12 +53,16 @@
         #noBtn {
             background: #f0f0f0;
             color: #333;
-            position: relative;
             transition: all 0.2s ease;
+            z-index: 1000;
+            position: relative;
         }
         #buttonContainer {
+            min-height: 60px;
             position: relative;
-            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         #clickPrompt {
             position: fixed;
@@ -186,7 +191,6 @@
             isExploded = true;
             mainHeart.visible = false;
 
-            // Create small hearts
             for (let i = 0; i < 50; i++) {
                 const smallHeart = new THREE.Mesh(smallHeartGeometry, heartMaterial);
                 smallHeart.scale.set(0.2, 0.2, 0.2);
@@ -213,20 +217,52 @@
         // Button handlers
         document.getElementById('yesBtn').addEventListener('click', () => {
             document.getElementById('proposalBox').style.display = 'none';
+            document.getElementById('clickPrompt').style.display = 'block';
             renderer.domElement.addEventListener('click', explode);
         });
 
         // No button evasion
         const noBtn = document.getElementById('noBtn');
-        noBtn.addEventListener('mouseover', (e) => {
-            const newX = Math.random() * (window.innerWidth - noBtn.offsetWidth);
-            const newY = Math.random() * (window.innerHeight - noBtn.offsetHeight);
-            
-            noBtn.style.position = 'fixed';
-            noBtn.style.left = `${Math.min(Math.max(0, newX), window.innerWidth - noBtn.offsetWidth)}px`;
-            noBtn.style.top = `${Math.min(Math.max(0, newY), window.innerHeight - noBtn.offsetHeight)}px`;
-        });
 
+        function moveButton() {
+            // Get button dimensions
+            const buttonWidth = noBtn.offsetWidth;
+            const buttonHeight = noBtn.offsetHeight;
+            
+            // Set safe margins
+            const margin = 50;
+            
+            // Calculate maximum positions
+            const maxX = (window.innerWidth - buttonWidth - margin)/2;
+            const maxY = (window.innerHeight - buttonHeight - margin)/2;
+            console.log(maxX,maxY);
+
+            
+            // Generate random positions within safe bounds
+            const randomX = Math.min(Math.max(margin, Math.random() * maxX), maxX);
+            const randomY = Math.min(Math.max(margin, Math.random() * maxY), maxY);
+
+            console.log(randomX,randomY);
+            
+            // Apply new position
+            noBtn.style.position = 'fixed';
+            noBtn.style.left = `${randomX}px`;
+            noBtn.style.top = `${randomY}px`;
+            noBtn.style.margin = '0';  // Remove margin to prevent overflow
+        }
+
+        let isMoving = false;
+        
+        noBtn.addEventListener('mouseover', () => {
+            if (!isMoving) {
+                isMoving = true;
+                moveButton();
+                setTimeout(() => {
+                    isMoving = false;
+                }, 100);
+            }
+        });
+        
         noBtn.addEventListener('click', () => {
             document.getElementById('proposalBox').style.display = 'none';
             startHeartBreak();
@@ -243,10 +279,8 @@
             requestAnimationFrame(animate);
 
             if (mainHeart.visible) {
-                // Rotation
                 mainHeart.rotation.y += 0.01;
                 
-                // Beating and floating
                 time += 0.1;
                 floatTime += 0.02;
                 const pulseFactor = 1 + Math.sin(time * beatFrequency) * beatStrength;

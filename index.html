@@ -225,31 +225,25 @@
         const noBtn = document.getElementById('noBtn');
 
         function moveButton() {
-            // Get button dimensions
-            const buttonWidth = noBtn.offsetWidth;
-            const buttonHeight = noBtn.offsetHeight;
-            
-            // Set safe margins
-            const margin = 50;
-            
-            // Calculate maximum positions
-            const maxX = (window.innerWidth - buttonWidth - margin)/2;
-            const maxY = (window.innerHeight - buttonHeight - margin)/2;
-            console.log(maxX,maxY);
-
-            
-            // Generate random positions within safe bounds
-            const randomX = Math.min(Math.max(margin, Math.random() * maxX), maxX);
-            const randomY = Math.min(Math.max(margin, Math.random() * maxY), maxY);
-
-            console.log(randomX,randomY);
-            
-            // Apply new position
-            noBtn.style.position = 'fixed';
-            noBtn.style.left = `${randomX}px`;
-            noBtn.style.top = `${randomY}px`;
-            noBtn.style.margin = '0';  // Remove margin to prevent overflow
-        }
+    const buttonWidth = noBtn.offsetWidth;
+    const buttonHeight = noBtn.offsetHeight;
+    const proposalBox = document.getElementById('proposalBox');
+    const margin = 20; // Margin from edges of the proposal box
+    
+    // Calculate available space within the proposal box
+    const maxX = proposalBox.clientWidth - buttonWidth - margin * 2;
+    const maxY = proposalBox.clientHeight - buttonHeight - margin * 2;
+    
+    // Generate random positions within the proposal box
+    const randomX = Math.random() * maxX + margin;
+    const randomY = Math.random() * maxY + margin;
+    
+    // Apply new position relative to the proposal box
+    noBtn.style.position = 'absolute';
+    noBtn.style.left = `${randomX}px`;
+    noBtn.style.top = `${randomY}px`;
+    noBtn.style.margin = '0'; // Remove default margins
+}
 
         let isMoving = false;
         

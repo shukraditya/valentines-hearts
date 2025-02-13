@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Valentine's Proposal</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+        #proposalBox {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+        }
+        .button {
+            margin: 10px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 0.2s;
+        }
+        #yesBtn {
+            background: #ff69b4;
+            color: white;
+        }
+        #noBtn {
+            background: #f0f0f0;
+            color: #333;
+        }
+        .button:hover {
+            transform: scale(1.1);
+        }
+        #clickPrompt {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 20px;
+            pointer-events: none;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="proposalBox">
+        <h2>Will you be my Valentine? 💝</h2>
+        <button id="yesBtn" class="button">Yes</button>
+        <button id="noBtn" class="button">No</button>
+    </div>
+    <div id="clickPrompt">Click the heart!</div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Heart shape geometry
+        function createHeartShape() {
+            const heartShape = new THREE.Shape();
+            const x = 0, y = 0;
+            
+            heartShape.moveTo(x + 0.5, y + 0.5);
+            heartShape.bezierCurveTo(x + 0.5, y + 0.5, x + 0.4, y, x, y);
+            heartShape.bezierCurveTo(x - 0.6, y, x - 0.6, y + 0.7, x - 0.6, y + 0.7);
+            heartShape.bezierCurveTo(x - 0.6, y + 1.1, x - 0.3, y + 1.54, x + 0.5, y + 1.9);
+            heartShape.bezierCurveTo(x + 1.2, y + 1.54, x + 1.6, y + 1.1, x + 1.6, y + 0.7);
+            heartShape.bezierCurveTo(x + 1.6, y + 0.7, x + 1.6, y, x + 1.0, y);
+            heartShape.bezierCurveTo(x + 0.7, y, x + 0.5, y + 0.5, x + 0.5, y + 0.5);
+
+            return heartShape;
+        }
+
+        // Create main heart
+        const extrudeSettings = {
+            steps: 2,
+            depth: 0.4,
+            bevelEnabled: true,
+            bevelThickness: 0.2,
+            bevelSize: 0.1,
+            bevelSegments: 3
+        };
+
+        const heartGeometry = new THREE.ExtrudeGeometry(createHeartShape(), extrudeSettings);
+        const heartMaterial = new THREE.MeshPhongMaterial({ color: 0xff69b4 });
+        const mainHeart = new THREE.Mesh(heartGeometry, heartMaterial);
+        mainHeart.rotation.z = Math.PI;
+        mainHeart.visible = false; // Initially hidden
+        scene.add(mainHeart);
+
+        // Create broken heart halves
+        const leftHalf = new THREE.Mesh(heartGeometry, heartMaterial.clone());
+        const rightHalf = new THREE.Mesh(heartGeometry, heartMaterial.clone());
+        leftHalf.rotation.z = Math.PI;
+        rightHalf.rotation.z = Math.PI;
+        leftHalf.visible = false;
+        rightHalf.visible = false;
+        scene.add(leftHalf);
+        scene.add(rightHalf);
+
+        // Lighting
+        const light = new THREE.PointLight(0xffffff, 1, 100);
+        light.position.set(0, 0, 10);
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0x404040));
+
+        // Camera position
+        camera.position.z = 5;
+
+        // Small hearts array for explosion
+        const smallHearts = [];
+        const smallHeartGeometry = new THREE.ExtrudeGeometry(createHeartShape(), {
+            steps: 1,
+            depth: 0.1,
+            bevelEnabled: false
+        });
+
+        let isBreakingHeart = false;
+        let breakProgress = 0;
+        let explosionTimer = 0;
+
+        function startHeartBreak() {
+            mainHeart.visible = false;
+            leftHalf.visible = true;
+            rightHalf.visible = true;
+            leftHalf.position.set(0, 0, 0);
+            rightHalf.position.set(0, 0, 0);
+            isBreakingHeart = true;
+            breakProgress = 0;
+        }
+
+        function resetMainHeart() {
+            mainHeart.visible = true;
+            mainHeart.scale.set(1, 1, 1);
+            leftHalf.visible = false;
+            rightHalf.visible = false;
+            smallHearts.forEach(heart => scene.remove(heart));
+            smallHearts.length = 0;
+            document.getElementById('clickPrompt').style.display = 'block';
+        }
+
+        // Explosion function
+        function explode() {
+            if (!mainHeart.visible) return;
+            
+            mainHeart.visible = false;
+            document.getElementById('clickPrompt').style.display = 'none';
+
+            // Create small hearts
+            for (let i = 0; i < 50; i++) {
+                const smallHeart = new THREE.Mesh(smallHeartGeometry, heartMaterial);
+                smallHeart.scale.set(0.2, 0.2, 0.2);
+                smallHeart.position.set(0, 0, 0);
+                smallHeart.rotation.z = Math.PI;
+                
+                smallHeart.velocity = new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.2,
+                    (Math.random() - 0.5) * 0.2,
+                    (Math.random() - 0.5) * 0.2
+                );
+                
+                smallHeart.rotation.x += Math.random() * Math.PI;
+                smallHeart.rotation.y += Math.random() * Math.PI;
+                
+                scene.add(smallHeart);
+                smallHearts.push(smallHeart);
+            }
+
+            // Start timer for heart respawn
+            explosionTimer = setTimeout(resetMainHeart, 5000); // 5 seconds
+        }
+
+        // Button handlers
+        document.getElementById('yesBtn').addEventListener('click', () => {
+            document.getElementById('proposalBox').style.display = 'none';
+            mainHeart.visible = true;
+            document.getElementById('clickPrompt').style.display = 'block';
+        });
+
+        document.getElementById('noBtn').addEventListener('click', () => {
+            document.getElementById('proposalBox').style.display = 'none';
+            startHeartBreak();
+        });
+
+        // Click handler
+        renderer.domElement.addEventListener('click', explode);
+
+        // Beating animation parameters
+        let time = 0;
+        const beatFrequency = 0.8;
+        const beatStrength = 0.2;
+
+        // Animation
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (mainHeart.visible) {
+                mainHeart.rotation.y += 0.01;
+                time += 0.1;
+                const pulseFactor = 1 + Math.sin(time * beatFrequency) * beatStrength;
+                mainHeart.scale.set(pulseFactor, pulseFactor, pulseFactor);
+            }
+
+            if (isBreakingHeart) {
+                breakProgress += 0.02;
+                leftHalf.position.x = -breakProgress * 2;
+                rightHalf.position.x = breakProgress * 2;
+                
+                if (breakProgress >= 1) {
+                    isBreakingHeart = false;
+                    setTimeout(resetMainHeart, 2000); // Reset after 2 seconds
+                }
+            }
+
+            smallHearts.forEach(heart => {
+                heart.position.add(heart.velocity);
+                heart.rotation.x += 0.02;
+                heart.rotation.y += 0.02;
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+    </script>
+</body>
+</html>

@@ -76,6 +76,20 @@
             display: none;
             z-index: 2;
         }
+        #loveMessage {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-family: 'Arial', sans-serif;
+            font-size: 24px;
+            text-align: center;
+            display: none;
+            z-index: 2;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
@@ -87,6 +101,7 @@
         </div>
     </div>
     <div id="clickPrompt">Click the heart!</div>
+    <div id="loveMessage">Thank you for being mine, I love you above and beyond the end of time</div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         // Scene setup
@@ -210,6 +225,9 @@
                 smallHearts.push(smallHeart);
             }
 
+            // Show the love message
+            document.getElementById('loveMessage').style.display = 'block';
+
             clearTimeout(explosionTimer);
             explosionTimer = setTimeout(resetMainHeart, 5000);
         }
@@ -225,25 +243,25 @@
         const noBtn = document.getElementById('noBtn');
 
         function moveButton() {
-    const buttonWidth = noBtn.offsetWidth;
-    const buttonHeight = noBtn.offsetHeight;
-    const proposalBox = document.getElementById('proposalBox');
-    const margin = 20; // Margin from edges of the proposal box
-    
-    // Calculate available space within the proposal box
-    const maxX = proposalBox.clientWidth - buttonWidth - margin * 2;
-    const maxY = proposalBox.clientHeight - buttonHeight - margin * 2;
-    
-    // Generate random positions within the proposal box
-    const randomX = Math.random() * maxX + margin;
-    const randomY = Math.random() * maxY + margin;
-    
-    // Apply new position relative to the proposal box
-    noBtn.style.position = 'absolute';
-    noBtn.style.left = `${randomX}px`;
-    noBtn.style.top = `${randomY}px`;
-    noBtn.style.margin = '0'; // Remove default margins
-}
+            const buttonWidth = noBtn.offsetWidth;
+            const buttonHeight = noBtn.offsetHeight;
+            const proposalBox = document.getElementById('proposalBox');
+            const margin = 20; // Margin from edges of the proposal box
+            
+            // Calculate available space within the proposal box
+            const maxX = proposalBox.clientWidth - buttonWidth - margin * 2;
+            const maxY = proposalBox.clientHeight - buttonHeight - margin * 2;
+            
+            // Generate random positions within the proposal box
+            const randomX = Math.random() * maxX + margin;
+            const randomY = Math.random() * maxY + margin;
+            
+            // Apply new position relative to the proposal box
+            noBtn.style.position = 'absolute';
+            noBtn.style.left = `${randomX}px`;
+            noBtn.style.top = `${randomY}px`;
+            noBtn.style.margin = '0'; // Remove default margins
+        }
 
         let isMoving = false;
         
